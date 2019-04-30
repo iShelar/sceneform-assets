@@ -15,18 +15,35 @@
  */
 package com.google.ar.sceneform.samples.cloudar;
 
+import android.accessibilityservice.AccessibilityService;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
+import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.ColorSpace;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.os.Environment;
+import android.preference.PreferenceManager;
+import android.provider.DocumentsContract;
 import android.support.v7.app.AppCompatActivity;
+import android.text.style.AbsoluteSizeSpan;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.inputmethod.InputContentInfo;
+import android.widget.Button;
+import android.view.View.OnClickListener;
 import android.widget.Toast;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.HitResult;
@@ -34,31 +51,48 @@ import com.google.ar.core.Plane;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.assets.RenderableSource;
 import com.google.ar.sceneform.rendering.ModelRenderable;
+import com.google.ar.sceneform.rendering.RenderableDefinition;
 import com.google.ar.sceneform.rendering.ViewRenderable;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.TransformableNode;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.FutureTask;
+
+import static android.app.DownloadManager.COLUMN_LOCAL_FILENAME;
+import static android.app.DownloadManager.COLUMN_LOCAL_URI;
+import static android.app.DownloadManager.COLUMN_STATUS;
+import static android.os.Environment.*;
+import static android.support.v4.view.accessibility.AccessibilityRecordCompat.setSource;
+import static java.security.AccessController.getContext;
+
 
 /**
  * This is an example activity that uses the Sceneform UX package to make common AR tasks easier.
  */
 public class CloudActivity extends AppCompatActivity {
-  private static final String TAG = CloudActivity.class.getSimpleName();
+    private static final String TAG = CloudActivity.class.getSimpleName();
     private static final double MIN_OPENGL_VERSION = 3.0;
 
     private ArFragment arFragment;
     private ModelRenderable andyRenderable;
+    Button button;
+    DownloadManager downloadManager;
+
+
 
     @Override
     @SuppressWarnings({"AndroidApiChecker", "FutureReturnValueIgnored"})
     // CompletableFuture requires api level 24
     // FutureReturnValueIgnored is not valid
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         if (!checkIsSupportedDeviceOrFinish(this)) {
@@ -66,34 +100,82 @@ public class CloudActivity extends AppCompatActivity {
         }
 
         setContentView(R.layout.activity_ux);
+        addListenerOnButton();
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
 
-        // When you build a Renderable, Sceneform loads its resources in the background while returning
+
+/*        String GLTF_ASSET = "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Duck/glTF/Duck.gltf";
+
+       File file = new File("file:///storage/emulated/0/Download/andy.sfb");
+        Callable callable = () -> new FileInputStream(file);
+
+        FutureTask task = new FutureTask<>(callable);
+        new Thread(task).start();
+
+        ModelRenderable.builder().setSource(this, callable).build().thenAccept(renderable -> andyRenderable = renderable).exceptionally(throwable -> {
+            Toast toast = Toast.makeText(this, "Unable to load andy renderable", Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
+            return null;
+        });
+*/
+        downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        Uri urq = Uri.parse("https://github.com/googlecodelabs/sceneform-intro/raw/master/Completed/app/src/main/assets/andy.sfb");
+        // andy android https://drive.google.com/uc?authuser=0&id=1dwxnZ82GsuWwLgBAtqIsLjHV2PcxHUqZ&export=download
+        // "https://holonextstr.blob.core.windows.net/food-blob-obj/box/box.gltf");
+        DownloadManager.Request request = new DownloadManager.Request(urq);
+        request.setTitle("model");
+        request.setDescription("downloading...");
+        request.allowScanningByMediaScanner();// if you want to be available from media players
+
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        Long reference = downloadManager.enqueue(request);
+       // File filepath = new File(getFilesDir(), "andy.sfb");
+        File filepath = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_DOWNLOADS), "andy.sfb");
+
+        file.exists()
 
 
-        // a CompletableFuture. Call thenAccept(), handle(), or check isDone() before calling get().
-    //this Link works fine
-
-//        String GLTF_ASSET = "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Duck/glTF/Duck.gltf";
+        Uri ura = Uri.fromFile(filepath);
 
 
-        // sdcard
+
+        Toast.makeText(getApplicationContext(), "FilePath : " + filepath, Toast.LENGTH_LONG).show();
 
 
-        File file = new File("file:///storage/emulated/0/Download/andy.sfb");
-       // File file = new File("/storage/emulated/0/ar/model.sfb");
+      //  String GLTF_ASSET = "/storage/emulated/0/Download/Box.gltf";
+        //https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf"
+
+      //Uri callable = Uri.fromFile(new File(getExternalStorageDirectory(), filepath));
+
+
+
+
+// works fine file:///android_asset/andy.sfb
+
+        //String str = filepath.toString();
+        //Uri ustr = Uri.fromFile(filepath);
+///        Uri contentUri = Uri.parse("content://com.ar.sceneform.samples.cloudar/files/andy.sfb");
+
+        //File file = new File("file///storage/emulated/0/Download/andy.sfb");
+        //Uri.parse("file:///storage/emulated/0/Download/House.sfb")
+        // Uri.fromFile(filepath)
+
+
+       // String passable = "/com.google.ar.sceneform.samples.cloudar/files/andy.sfb";
+
+        File file = new File("storasge/andy.sfb");
         Callable callable = new Callable() {
-            @override
+            @Override
             public InputStream call() throws Exception {
                 InputStream inputStream = new FileInputStream(file);
                 return inputStream;
             }
         };
-        FutureTask task = new FutureTask<>(callable);
-        new Thread(task).start();
+
 
         ModelRenderable.builder()
-                .setSource(this, callable)
+                .setSource(this, callable )
                 .build()
                 .thenAccept(renderable -> andyRenderable = renderable)
                 .exceptionally(
@@ -106,59 +188,63 @@ public class CloudActivity extends AppCompatActivity {
                         });
 
 
-     /*
-       String GLTF_ASSET = "https://holonextstr.blob.core.windows.net/test-blob-container/box-gltf/box-gltf.gltf";
-        */
 
-                //https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf"
-        /* When you build a Renderable, Sceneform loads model and related resources
-         * in the background while returning a CompletableFuture.
-         * Call thenAccept(), handle(), or check isDone() before calling get().
 
-        ModelRenderable.builder()
-                .setSource(this, RenderableSource.builder().setSource(
-                        this,
-                        Uri.parse(GLTF_ASSET),
-                        RenderableSource.SourceType.GLTF2)
-                        .build())
-                .setRegistryId(GLTF_ASSET)
-                .build()
-                .thenAccept(renderable -> {
-                    andyRenderable = renderable;
-                    Toast toast = Toast.makeText(getApplicationContext(), "HoloNext.",
-                            Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.TOP|Gravity.LEFT, 0, 0);
-                    toast.show();
-                })
-                .exceptionally(
-                        throwable -> {
-                            Toast toast =
-                                    Toast.makeText(this, "Unable to load renderable " +
-                                            GLTF_ASSET, Toast.LENGTH_LONG);
-                            toast.setGravity(Gravity.CENTER, 0, 0);
-                            toast.show();
-                            return null;
-                        });
-*/
 
-        arFragment.setOnTapArPlaneListener(
-                (HitResult hitResult, Plane plane, MotionEvent motionEvent) -> {
-                    if (andyRenderable == null) {
-                        return;
-                    }
+        arFragment.setOnTapArPlaneListener((HitResult hitResult, Plane plane, MotionEvent motionEvent) -> {
+            if (andyRenderable == null) {
+                return;
+            }
 
-                    // Create the Anchor.
-                    Anchor anchor = hitResult.createAnchor();
-                    AnchorNode anchorNode = new AnchorNode(anchor);
-                    anchorNode.setParent(arFragment.getArSceneView().getScene());
+            // Create the Anchor.
+            Anchor anchor = hitResult.createAnchor();
+            AnchorNode anchorNode = new AnchorNode(anchor);
+            anchorNode.setParent(arFragment.getArSceneView().getScene());
 
-                    // Create the transformable andy and add it to the anchor.
-                    TransformableNode andy = new TransformableNode(arFragment.getTransformationSystem());
-                    andy.setParent(anchorNode);
-                    andy.setRenderable(andyRenderable);
-                    andy.select();
-                });
+            // Create the transformable andy and add it to the anchor.
+            TransformableNode andy = new TransformableNode(arFragment.getTransformationSystem());
+            andy.setParent(anchorNode);
+            andy.setRenderable(andyRenderable);
+            andy.select();
+        });
     }
+
+
+
+
+    public void addListenerOnButton() {
+
+        button = (Button) findViewById(R.id.button);
+        button.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+
+
+                downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                Uri uri = Uri.parse("https://github.com/googlecodelabs/sceneform-intro/raw/master/Completed/app/src/main/assets/House.sfb");
+                     // "https://holonextstr.blob.core.windows.net/food-blob-obj/box/box.gltf");
+                DownloadManager.Request request = new DownloadManager.Request(uri);
+                request.setTitle("model");
+                request.setDescription("downloading...");
+                request.allowScanningByMediaScanner();// if you want to be available from media players
+
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                Long reference = downloadManager.enqueue(request);
+                File filepath = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "house.sfb");
+
+
+                Toast.makeText(getApplicationContext(), "FilePath : " + filepath, Toast.LENGTH_LONG).show();
+              // this file is saved at : /storage/emulated/0/Download/andy.png
+
+                //Toast.makeText(getApplicationContext(), "path" + absolutePath, Toast.LENGTH_LONG).show();
+            }
+
+        });
+    }
+
+
+
 
     /**
      * Returns false and displays an error message if Sceneform can not run, true if Sceneform can run
@@ -189,3 +275,42 @@ public class CloudActivity extends AppCompatActivity {
         return true;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

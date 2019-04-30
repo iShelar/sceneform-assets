@@ -14,10 +14,11 @@
    limitations under the License.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HelloSceneformActivity">
+    tools:context=".CloudActivity">
 
   <fragment
       android:id="@+id/ux_fragment"
@@ -25,5 +26,15 @@
       android:layout_width="match_parent"
       android:layout_height="match_parent"
       tools:layout="@android:layout/simple_spinner_item" />
+
+  <Button
+      android:id="@+id/button"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="Download"
+      android:textAlignment="viewStart"
+      android:textAllCaps="true"
+      android:textColor="@android:color/holo_blue_dark"
+      android:textStyle="bold" />
 
 </FrameLayout>
