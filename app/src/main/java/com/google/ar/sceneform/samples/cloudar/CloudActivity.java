@@ -104,20 +104,7 @@ public class CloudActivity extends AppCompatActivity {
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.ux_fragment);
 
 
-/*        String GLTF_ASSET = "https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/Duck/glTF/Duck.gltf";
-
-       File file = new File("file:///storage/emulated/0/Download/andy.sfb");
-        Callable callable = () -> new FileInputStream(file);
-
-        FutureTask task = new FutureTask<>(callable);
-        new Thread(task).start();
-
-        ModelRenderable.builder().setSource(this, callable).build().thenAccept(renderable -> andyRenderable = renderable).exceptionally(throwable -> {
-            Toast toast = Toast.makeText(this, "Unable to load andy renderable", Toast.LENGTH_LONG);
-            toast.setGravity(Gravity.CENTER, 0, 0);
-            toast.show();
-            return null;
-        });
+/*
 */
         downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         Uri urq = Uri.parse("https://github.com/googlecodelabs/sceneform-intro/raw/master/Completed/app/src/main/assets/andy.sfb");
@@ -133,39 +120,23 @@ public class CloudActivity extends AppCompatActivity {
        // File filepath = new File(getFilesDir(), "andy.sfb");
         File filepath = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_DOWNLOADS), "andy.sfb");
 
-        file.exists()
-
-
-        Uri ura = Uri.fromFile(filepath);
-
 
 
         Toast.makeText(getApplicationContext(), "FilePath : " + filepath, Toast.LENGTH_LONG).show();
 
 
-      //  String GLTF_ASSET = "/storage/emulated/0/Download/Box.gltf";
-        //https://github.com/KhronosGroup/glTF-Sample-Models/raw/master/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf"
-
-      //Uri callable = Uri.fromFile(new File(getExternalStorageDirectory(), filepath));
 
 
+        File file = new File("storage/emulated/0/Download/andy.sfb");
+     //   file.exists();
 
 
-// works fine file:///android_asset/andy.sfb
+        if (file.exists())
+            System.out.println("Exists");
+        else
+            System.out.println("Does not Exists");
 
-        //String str = filepath.toString();
-        //Uri ustr = Uri.fromFile(filepath);
-///        Uri contentUri = Uri.parse("content://com.ar.sceneform.samples.cloudar/files/andy.sfb");
-
-        //File file = new File("file///storage/emulated/0/Download/andy.sfb");
-        //Uri.parse("file:///storage/emulated/0/Download/House.sfb")
-        // Uri.fromFile(filepath)
-
-
-       // String passable = "/com.google.ar.sceneform.samples.cloudar/files/andy.sfb";
-
-        File file = new File("storasge/andy.sfb");
-        Callable callable = new Callable() {
+            Callable callable = new Callable() {
             @Override
             public InputStream call() throws Exception {
                 InputStream inputStream = new FileInputStream(file);
@@ -186,8 +157,6 @@ public class CloudActivity extends AppCompatActivity {
                             toast.show();
                             return null;
                         });
-
-
 
 
 
@@ -222,16 +191,15 @@ public class CloudActivity extends AppCompatActivity {
 
 
                 downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-                Uri uri = Uri.parse("https://github.com/googlecodelabs/sceneform-intro/raw/master/Completed/app/src/main/assets/House.sfb");
+                Uri uri = Uri.parse("https://github.com/googlecodelabs/sceneform-intro/raw/master/Completed/app/src/main/assets/andy.sfb");
                      // "https://holonextstr.blob.core.windows.net/food-blob-obj/box/box.gltf");
                 DownloadManager.Request request = new DownloadManager.Request(uri);
                 request.setTitle("model");
-                request.setDescription("downloading...");
                 request.allowScanningByMediaScanner();// if you want to be available from media players
 
                 request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                 Long reference = downloadManager.enqueue(request);
-                File filepath = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "house.sfb");
+                File filepath = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "andy.sfb");
 
 
                 Toast.makeText(getApplicationContext(), "FilePath : " + filepath, Toast.LENGTH_LONG).show();
